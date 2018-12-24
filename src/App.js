@@ -5,6 +5,6 @@ new zModal({
     prefix: 'data-modal',
     openOnTag: 'a',
     eventOpen: 'click',
-
+    closeOnEsc: true,
     closeOnPlaceholder: true
 })

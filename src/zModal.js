@@ -18,6 +18,8 @@ class zModal {
         this.tagOpen = this.opts.openOnTag
         // main event on open modal
         this.tagEvent = this.opts.eventOpen
+        // close modal on ESC key
+        this.closeOnEsc = this.opts.closeOnEsc || false
         // main placeholder 
         this.placeholder = null
         // placeholder opacity
@@ -41,13 +43,12 @@ class zModal {
         this.ZM = {
             addClass (c) {
                 let { prototype } = this
-
+                document.body.classList.add(`${prototype.defaultClass}-denyoverflow`)
                 this.modal.classList.add(c)
                 this.placeholder.style.opacity = prototype.placeholderOpacity
             },
             rmClass (c) {
                 let { prototype } = this
-                
                 this.modal = prototype.last
                 this.placeholder = prototype.placeholder
                 this.effectModal = this.modal.getAttribute('data-effect')
@@ -55,6 +56,7 @@ class zModal {
                 this.modal.classList.remove(c)
             },
             removeEffectClasses () {
+                document.body.classList.remove(`${this.prototype.defaultClass}-denyoverflow`)
                 return new Promise(resolve => {
                     this.placeholder.style.opacity = '0'
                     this.modal.classList.remove(`${this.prototype.defaultClass}-${this.effectModal}`)
@@ -62,6 +64,7 @@ class zModal {
                 })
             },
             close () {
+                this.prototype.close()
                 this.removeEffectClasses().then(this.hideAll.bind(this))
             },
             hideAll () {
@@ -87,16 +90,27 @@ class zModal {
                 const iCanCloseModalAtClick = this.placeholder.className.indexOf(`${self.defaultClass}-placeholder-close`) > -1
                 // find the elements that close the form
                 const elems = this.modal.childNodes
+
                 if(iCanCloseModalAtClick) this.click.call(this.placeholder, this.close.bind(this))
                 if(elems) this.eachWithHandler(elems,this.close.bind(this))
+
+                // close on escp
+                if(self.closeOnEsc) this.pressESC()
+            },
+            pressESC () {
+                window.addEventListener('keyup', ev => {
+                    if(ev.keyCode === 27) this.close()
+                    return
+                })
             },
             eachWithHandler (items, handler) {
+                // find items with class {defaultClass}-placeholder-close
                 let findingItems = Object.getOwnPropertyNames(items).filter(item => {
-                    return items[item].nodeName !== '#text'
-                })
+                    if(items[item].nodeName !== '#text' && items[item].classList.value.indexOf(`${this.prototype.defaultClass}-itemclose`) > -1) return item
+                }).map(item => { return items[item] })
                 
                 if(findingItems.length > 0) {
-                    findingItems.forEach(item => { this.click.call(items[item], this.close.bind(this)) })
+                    findingItems.forEach(item => { this.click.call(item, this.close.bind(this)) })
                 }
                 return this
             }
@@ -124,7 +138,7 @@ class zModal {
      * @default this.last - last modal in modals array
      */
     close (modal = this.last) {
-
+        return this.modals.pop()
     }
 
     /**
@@ -139,7 +153,7 @@ class zModal {
      * @param {*} placeholder 
      */
     reloadLast () { 
-        this.last = this.modals.reverse()[0] 
+        this.last = this._getLastModal()
         return this
     }
     
