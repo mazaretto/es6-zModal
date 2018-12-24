@@ -11,8 +11,17 @@ class zModal {
         this.opts = userObject
         // attribute on opening modal
         this.prefix = this.opts.prefix
+        this.defaultPrefix = 'data-modal'
+        // default class
+        this.defaultClass = 'zmodal'
+        // open modal on tag
+        this.tagOpen = this.opts.openOnTag
+        // main event on open modal
+        this.tagEvent = this.opts.eventOpen
         // main placeholder 
         this.placeholder = null
+        // placeholder opacity
+        this.placeholderOpacity = null
         // default background placeholder
         this.defaultColorPlaceholder = '#333'
         // default opacity placeholder
@@ -23,10 +32,76 @@ class zModal {
         this.last = this._getLastModal()
         // Html document
         this.DOM = document.body
-        // default class
-        this.defaultClass = 'zmodal'
+        // time close modal (ms)
+        this.timeClose = 400
         // plugin initialization
         this._init()
+
+        // inner modal methods
+        this.ZM = {
+            addClass (c) {
+                let { prototype } = this
+
+                this.modal.classList.add(c)
+                this.placeholder.style.opacity = prototype.placeholderOpacity
+            },
+            rmClass (c) {
+                let { prototype } = this
+                
+                this.modal = prototype.last
+                this.placeholder = prototype.placeholder
+                this.effectModal = this.modal.getAttribute('data-effect')
+                this.placeholder.classList.remove(c)
+                this.modal.classList.remove(c)
+            },
+            removeEffectClasses () {
+                return new Promise(resolve => {
+                    this.placeholder.style.opacity = '0'
+                    this.modal.classList.remove(`${this.prototype.defaultClass}-${this.effectModal}`)
+                    setTimeout(resolve, this.prototype.timeClose)
+                })
+            },
+            close () {
+                this.removeEffectClasses().then(this.hideAll.bind(this))
+            },
+            hideAll () {
+                let classHidden = `${this.prototype.defaultClass}-hidden`
+                this.placeholder.classList.add(classHidden)
+                this.modal.classList.add(classHidden)
+            },
+            open () {
+                let defaultClass = this.prototype.defaultClass
+
+                this.rmClass(`${defaultClass}-hidden`)
+                setTimeout(() => {
+                    this.addClass(`${defaultClass}-${this.effectModal}`)
+                }, this.prototype.timeClose)
+                return this
+            },
+            click (act) {
+                this.addEventListener('click', act)
+            },
+            listen () {
+                let self = this.prototype
+
+                const iCanCloseModalAtClick = this.placeholder.className.indexOf(`${self.defaultClass}-placeholder-close`) > -1
+                // find the elements that close the form
+                const elems = this.modal.childNodes
+                if(iCanCloseModalAtClick) this.click.call(this.placeholder, this.close.bind(this))
+                if(elems) this.eachWithHandler(elems,this.close.bind(this))
+            },
+            eachWithHandler (items, handler) {
+                let findingItems = Object.getOwnPropertyNames(items).filter(item => {
+                    return items[item].nodeName !== '#text'
+                })
+                
+                if(findingItems.length > 0) {
+                    findingItems.forEach(item => { this.click.call(items[item], this.close.bind(this)) })
+                }
+                return this
+            }
+        }
+        this.ZM.prototype = this
     }
 
     /**
@@ -37,12 +112,10 @@ class zModal {
     }
 
     /**
-     * 
-     * @param {*} modal 
      * @default this.last - last opening modal in modals array
      */
-    open (modal = this.last) {
-
+    open () {
+        this.ZM.open().listen()
     }
 
     /**
@@ -60,6 +133,15 @@ class zModal {
     _initStyles () {
         
     }
+
+    /**
+     * @return last item in modals array
+     * @param {*} placeholder 
+     */
+    reloadLast () { 
+        this.last = this.modals.reverse()[0] 
+        return this
+    }
     
     /**
      * @return placecholder for modals (with user opts)
@@ -67,16 +149,59 @@ class zModal {
      */
     _addOptionsInPlaceholder (placeholder) {
         const opts = this.opts,
-            { effect, duration, fill, opacity } = opts,
+            { fill, opacity } = opts,
             defaultClass = this.defaultClass,
             closeOnPlaceholder = (opts.closeOnPlaceholder) ? defaultClass + '-placeholder-close' : defaultClass + '-placeholder-static';
-        placeholder.classList.add(`${defaultClass}-placeholder`,
-                                    `${defaultClass}-${effect || 'fadein'}`,
-                                    closeOnPlaceholder)
-        placeholder.style = `background: ${fill || this.defaultColorPlaceholder};
-                             opacity: ${opacity || this.defaultOpacityPlaceholder};`
+        
+        placeholder.classList.add(`${defaultClass}-placeholder`,`${defaultClass}-hidden`,closeOnPlaceholder)
+        placeholder.setAttribute(`data-${defaultClass}-opacity`,`${opacity || this.defaultOpacityPlaceholder}`)
+        placeholder.style = `background: ${fill || this.defaultColorPlaceholder};`
 
         return placeholder
+    }
+
+    /**
+     * @return this
+     * @param {*} newModal 
+     */
+    _pushModal (newModal) {
+        // checking on isset modal in modals array
+        const isModalInArray = this.modals.filter(modal => {
+            return modal === newModal
+        })
+
+        if(isModalInArray.length <= 0) {
+            this.modals.push(newModal)
+        }
+        return this
+    }
+
+    /**
+     * @param {id} - modal id
+     */
+    convertModal(id) {
+        const currentModal = document.querySelector(`#${id}`)
+
+        if( currentModal ) {
+            this.reloadModals(currentModal)
+                .reloadLast()
+                .open()
+        }
+        return this 
+    }
+    /**
+     * @param {*} newModal 
+     * @return add new modal in array modals
+     */
+    reloadModals(newModal) {
+        let isModalHidden = () => {
+            return newModal.className.indexOf(this.defaultClass + '-hidden') > -1
+        }
+        if( isModalHidden ) {
+            // push modal in modals array
+            this._pushModal(newModal)
+        }
+        return this
     }
 
     /**
@@ -91,12 +216,29 @@ class zModal {
     }
 
     /**
-     * @adding append placeholder in <body>
+     * @return append placeholder in <body>
      */
     _addPlaceholder () {
         this.DOM.appendChild(
             this.createPlaceholder()
         )
+        this.placeholderOpacity = this.placeholder.getAttribute(`data-${this.defaultClass}-opacity`)
+        return this
+    }
+
+    /**
+     * foreach DOM elemnents from prefix
+     */
+    _openObjectsHandler (item) {
+        item.addEventListener(`${this.tagEvent || 'click'}`, event => {
+            event.preventDefault()
+            const { target } = event,
+                  modalId  = target.attributes[this.prefix].nodeValue
+            this.convertModal(modalId)
+        })
+    }
+    _initOpenObjects () {
+        document.querySelectorAll(`${this.openOnTag || '*'}[${this.prefix || this.defaultPrefix}]`).forEach(this._openObjectsHandler.bind(this))
     }
 
     /**
@@ -105,6 +247,7 @@ class zModal {
     _init () {
         this._initStyles()
         this._addPlaceholder()
+        this._initOpenObjects()
     }
 }
 

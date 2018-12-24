@@ -1,6 +1,6 @@
 @import "./_vars";
 
-.@{Z}-transition{
+.transition{
     transition: all .5s ease
 }
 
@@ -11,7 +11,8 @@
     top: 0;
     left: 0;
     z-index: 20;
-    .zmodal-transition
+    opacity: 0;
+    .transition
 }
 
 .@{Z}-placeholder-close {
@@ -22,15 +23,16 @@
     display: none;
 }
 
-.@{Z}-fadein {
+.@{Z}.@{Z}-fadein {
     opacity: 1
 }
 
-.@{Z}-slideTop {
-
+.@{Z}.@{Z}-slideup {
+    transform: translateY(-10px);
+    opacity: 1;
 }
 
-.@{Z}-slideBottom {
+.@{Z}-slidedown {
 
 }
 
@@ -39,5 +41,8 @@
     z-index: 21;
     width: 400px;
     height: 400px;
-    background: #fff;
+    background: red;
+    opacity: 0;
+
+    .transition
 }
