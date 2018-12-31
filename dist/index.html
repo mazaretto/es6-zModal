@@ -7,12 +7,17 @@
         <title>zModal plugin ES6</title>
     </head>
     <body>
-        <button type="button" data-modal="callback_modal">Нажми на меня</button>
+        <button type="button" data-zmodal="callback_modal">Нажми на меня</button>
         <!-- bundle script -->
-        <div class="zmodal zmodal-hidden" data-effect="slideup" id="callback_modal">
-            <div class="zmodal-itemclose">фыв</div>
-            <div class="zmodal-itemclose">фыв</div>
-            <h1>Hello</h1>
+        <div class="zmodal zmodal-hidden" data-effect="fadein" id="callback_modal">
+            <div class="zmodal-close">фыв</div>
+            <div class="zmodal-close">фыв</div>
+            <h1 data-zmodal="second_modal">Hello</h1>
+        </div>
+        <div class="zmodal zmodal-hidden" data-effect="fadein" id="second_modal">
+            <div class="zmodal-close">фыв</div>
+            <div class="zmodal-close">фыв</div>
+            <h1>asdasdasdas</h1>
         </div>
         <script src="zmodal.min.js"></script>
     </body>

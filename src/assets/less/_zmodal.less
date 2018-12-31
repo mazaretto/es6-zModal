@@ -1,7 +1,7 @@
 @import "./_vars";
 
-.transition{
-    transition: all .5s ease
+.transition {
+    transition:  .5s ease
 }
 
 .@{Z}-denyoverflow {
@@ -19,7 +19,11 @@
     .transition
 }
 
-.@{Z}-placeholder-close {
+.@{Z}-placeholder-visible {
+    opacity: .5!important;
+}
+
+.@{Z}-placeholder-closing {
     cursor: pointer;
 }
 
@@ -27,8 +31,8 @@
     display: none;
 }
 
-.@{Z}.@{Z}-fadein {
-    opacity: 1
+.@{Z}-fadein {
+    opacity: 1!important;
 }
 
 .@{Z}.@{Z}-slideup {

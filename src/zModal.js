@@ -1,268 +1,220 @@
-/**
- * @class {zModal} 
- * @param {object} - initializtion object of plugin
- */
-class zModal {
-    /**
-     * @param {*} userObject 
-     */
-    constructor (userObject) {
-        // set options on modal
-        this.opts = userObject
-        // attribute on opening modal
-        this.prefix = this.opts.prefix
-        this.defaultPrefix = 'data-modal'
+export default class zModal {
+    constructor (props) {
+        // Set user props
+        this.props = props || {}
+        // placeholder modal
+        this.placeholder = null
+        // last modal
+        this.last = null 
+        // elements with class zmodal-close in last modal
+        this.closingElements = []
+        // array modals
+        this.modals = new Array()
         // default class
         this.defaultClass = 'zmodal'
-        // open modal on tag
-        this.tagOpen = this.opts.openOnTag
-        // main event on open modal
-        this.tagEvent = this.opts.eventOpen
-        // close modal on ESC key
-        this.closeOnEsc = this.opts.closeOnEsc || false
-        // main placeholder 
-        this.placeholder = null
-        // placeholder opacity
-        this.placeholderOpacity = null
-        // default background placeholder
-        this.defaultColorPlaceholder = '#333'
-        // default opacity placeholder
-        this.defaultOpacityPlaceholder = '.5'
-        // array of all modal windows
-        this.modals = []
-        // last modal in arary
-        this.last = this._getLastModal()
-        // Html document
-        this.DOM = document.body
-        // time close modal (ms)
-        this.timeClose = 400
-        // plugin initialization
-        this._init()
-
-        // inner modal methods
-        this.ZM = {
-            addClass (c) {
-                let { prototype } = this
-                document.body.classList.add(`${prototype.defaultClass}-denyoverflow`)
-                this.modal.classList.add(c)
-                this.placeholder.style.opacity = prototype.placeholderOpacity
+        // last modal elements, which has class zmodal-close
+        this.lastModalElementsClassList = this.defaultClass + '-close'
+        // placeholder class
+        this.placeholderClass = this.defaultClass + '-placeholder'
+        // placeholder visible class
+        this.placeholderVisibleClass = this.placeholderClass + '-visible'
+        // hidden class
+        this.hiddenClass = this.defaultClass + '-hidden' 
+        // Snippet functions
+        this.F = {
+            // self {zModal}
+            self: this,
+            // check modal on open class
+            isModalOpen (modal) {
+                return !(modal.className.indexOf(this.self.hiddenClass) > -1)
             },
-            rmClass (c) {
-                let { prototype } = this
-                this.modal = prototype.last
-                this.placeholder = prototype.placeholder
-                this.effectModal = this.modal.getAttribute('data-effect')
-                this.placeholder.classList.remove(c)
-                this.modal.classList.remove(c)
+            // check modals array on length <= 0
+            modalsArrayEmpty (c1,c2) {
+                if(this.self.modals.length <= 0) return c1()
+                else return c2()
             },
-            removeEffectClasses () {
-                document.body.classList.remove(`${this.prototype.defaultClass}-denyoverflow`)
-                return new Promise(resolve => {
-                    this.placeholder.style.opacity = '0'
-                    this.modal.classList.remove(`${this.prototype.defaultClass}-${this.effectModal}`)
-                    setTimeout(resolve, this.prototype.timeClose)
+            // check, isset modal in array all modals
+            isModalInArray (newModal) {
+                const { modals } = this.self
+                const findModal = modals.filter(modal => {
+                    return modal === newModal
                 })
-            },
-            close () {
-                this.prototype.close()
-                this.removeEffectClasses().then(this.hideAll.bind(this))
-            },
-            hideAll () {
-                let classHidden = `${this.prototype.defaultClass}-hidden`
-                this.placeholder.classList.add(classHidden)
-                this.modal.classList.add(classHidden)
-            },
-            open () {
-                let defaultClass = this.prototype.defaultClass
 
-                this.rmClass(`${defaultClass}-hidden`)
-                setTimeout(() => {
-                    this.addClass(`${defaultClass}-${this.effectModal}`)
-                }, this.prototype.timeClose)
-                return this
+                return findModal.length > 0
             },
-            click (act) {
-                this.addEventListener('click', act)
-            },
-            listen () {
-                let self = this.prototype
-
-                const iCanCloseModalAtClick = this.placeholder.className.indexOf(`${self.defaultClass}-placeholder-close`) > -1
-                // find the elements that close the form
-                const elems = this.modal.childNodes
-
-                if(iCanCloseModalAtClick) this.click.call(this.placeholder, this.close.bind(this))
-                if(elems) this.eachWithHandler(elems,this.close.bind(this))
-
-                // close on escp
-                if(self.closeOnEsc) this.pressESC()
-            },
-            pressESC () {
-                window.addEventListener('keyup', ev => {
-                    if(ev.keyCode === 27) this.close()
-                    return
-                })
-            },
-            eachWithHandler (items, handler) {
-                // find items with class {defaultClass}-placeholder-close
-                let findingItems = Object.getOwnPropertyNames(items).filter(item => {
-                    if(items[item].nodeName !== '#text' && items[item].classList.value.indexOf(`${this.prototype.defaultClass}-itemclose`) > -1) return item
-                }).map(item => { return items[item] })
-                
-                if(findingItems.length > 0) {
-                    findingItems.forEach(item => { this.click.call(item, this.close.bind(this)) })
-                }
-                return this
-            }
+            // get modal from data attribute
+            getModal ({ dataset }) {
+                return document.getElementById(dataset[this.self.prefix.replace('data-','')])
+            } 
         }
-        this.ZM.prototype = this
+
+        // Veryfy user props. and init plugin
+        this._verifyProps()._addPlaceholder()._init()._watch()
     }
 
     /**
-     * @return last modal in array modals
+     * Check props
+     * @return {zModal}
      */
-    _getLastModal () {
-        return this.modals.reverse()[0]
-    }
-
-    /**
-     * @default this.last - last opening modal in modals array
-     */
-    open () {
-        this.ZM.open().listen()
-    }
-
-    /**
-     * 
-     * @param {*} modal 
-     * @default this.last - last modal in modals array
-     */
-    close (modal = this.last) {
-        return this.modals.pop()
-    }
-
-    /**
-     * @return appending styles in <head> tag
-     */
-    _initStyles () {
+    _verifyProps () {
+        const { validTags, prefix, 
+                eventOpen, timeOC, 
+                fillPlaceholder, closeOnESC,
+                closeOnPlaceholder } = this.props
         
+        // delete user props and replacing valid propses
+        delete this.props
+        // add valid properties in main class
+        this.validTags = validTags || '*'
+        // event on open modal
+        this.eventOpen = eventOpen || 'click'
+        // data-attribute
+        this.prefix = prefix || 'data-zmodal'
+        // time Opening and Closing modals.
+        this.timeOC = timeOC || 300
+        // background placeholder
+        this.fillPlaceholder = fillPlaceholder || '#333'
+        // where you press key ESC, modal hide.
+        this.closeOnESC = closeOnESC || !1
+        // where you click on placeholder, modal hide.
+        this.closeOnPlaceholder = closeOnPlaceholder || 1
+        return this
     }
 
     /**
-     * @return last item in modals array
-     * @param {*} placeholder 
+     * Open and check modal
      */
-    reloadLast () { 
-        this.last = this._getLastModal()
-        return this
+    open ({ target }) {
+        const { F } = this
+        const currentModal = F.getModal(target)
+        
+        
+        if( !F.isModalOpen(currentModal) && !F.isModalInArray(currentModal) ) {
+            this._pushModal(currentModal).show()
+        }
     }
     
     /**
-     * @return placecholder for modals (with user opts)
-     * @param {*} placeholder 
+     * Close last modal
      */
-    _addOptionsInPlaceholder (placeholder) {
-        const opts = this.opts,
-            { fill, opacity } = opts,
-            defaultClass = this.defaultClass,
-            closeOnPlaceholder = (opts.closeOnPlaceholder) ? defaultClass + '-placeholder-close' : defaultClass + '-placeholder-static';
-        
-        placeholder.classList.add(`${defaultClass}-placeholder`,`${defaultClass}-hidden`,closeOnPlaceholder)
-        placeholder.setAttribute(`data-${defaultClass}-opacity`,`${opacity || this.defaultOpacityPlaceholder}`)
-        placeholder.style = `background: ${fill || this.defaultColorPlaceholder};`
+    close () {     
+        const { F } = this
+        // modal removing
+        const removingModal = this.modals.shift()
+        // update last modal
+        this._updateLast(removingModal)
 
-        return placeholder
+        F.modalsArrayEmpty(() => {
+            this.hide(1)            
+        }, () => {
+            this.hide(!1)
+        })
     }
 
     /**
-     * @return this
-     * @param {*} newModal 
+     * Show modal
+     */
+    show (last = this.last, placeholder = this.placeholder) {
+        last.classList.remove(this.hiddenClass)
+        placeholder.classList.remove(this.hiddenClass)
+        this.doWithWait(() => {
+            last.classList.add(`${this.defaultClass}-${this.effectClass}`)
+            placeholder.classList.add(`${this.placeholderVisibleClass}`)
+        })
+    }
+
+    /**
+     * Timeout on open
+     */
+    doWithWait(callback, time = this.timeOC) {
+        setTimeout(callback, time)
+    }
+
+    /**
+     * Hide modal
+     */
+    hide (hidePlaceholder) {
+        try {
+            const { last } = this
+
+            last.classList.remove(this.defaultClass + '-' + this.effectClass)
+            
+            if(hidePlaceholder) this.placeholder.classList.remove(this.placeholderVisibleClass)
+
+            this.doWithWait(() => {
+                last.classList.add(this.hiddenClass)
+
+                if(hidePlaceholder) this.placeholder.classList.add(this.hiddenClass)
+            })
+        } catch (e) {}
+    }
+
+    /**
+     * Push modal in array modals
      */
     _pushModal (newModal) {
-        // checking on isset modal in modals array
-        const isModalInArray = this.modals.filter(modal => {
-            return modal === newModal
-        })
+        this.modals.push(newModal)
+        this.modals.reverse()
+        this.effectClass = newModal.dataset.effect
+        this._updateLast()
 
-        if(isModalInArray.length <= 0) {
-            this.modals.push(newModal)
-        }
         return this
     }
 
     /**
-     * @param {id} - modal id
+     * Update last modal
      */
-    convertModal(id) {
-        const currentModal = document.querySelector(`#${id}`)
-
-        if( currentModal ) {
-            this.reloadModals(currentModal)
-                .reloadLast()
-                .open()
-        }
-        return this 
-    }
-    /**
-     * @param {*} newModal 
-     * @return add new modal in array modals
-     */
-    reloadModals(newModal) {
-        let isModalHidden = () => {
-            return newModal.className.indexOf(this.defaultClass + '-hidden') > -1
-        }
-        if( isModalHidden ) {
-            // push modal in modals array
-            this._pushModal(newModal)
-        }
-        return this
+    _updateLast (last) {
+        this.last = last || this.modals[0]
     }
 
     /**
-     * creating placeholder for modals
-     * @return DOM element
-     */
-    createPlaceholder () {
-        let placeholder = document.createElement('div')
-            placeholder = this._addOptionsInPlaceholder(placeholder)
-
-        return this.placeholder = placeholder
-    }
-
-    /**
-     * @return append placeholder in <body>
+     * Add placeholder in document
      */
     _addPlaceholder () {
-        this.DOM.appendChild(
-            this.createPlaceholder()
-        )
-        this.placeholderOpacity = this.placeholder.getAttribute(`data-${this.defaultClass}-opacity`)
+        const isPlaceholderCanCloseModal = (this.closeOnPlaceholder) ? this.placeholderClass + '-closing' : this.placeholderClass
+
+        this.placeholder = document.createElement('div')
+        // set default and user styles
+        this.placeholder.style = `background-color: ${this.fillPlaceholder}`
+        // set default classes
+        this.placeholder.classList.add(this.placeholderClass, this.hiddenClass, isPlaceholderCanCloseModal)
+        // add placeholder in document
+        document.body.appendChild(this.placeholder)
+
         return this
     }
 
     /**
-     * foreach DOM elemnents from prefix
+     * Watch click, hovers and other methods
      */
-    _openObjectsHandler (item) {
-        item.addEventListener(`${this.tagEvent || 'click'}`, event => {
-            event.preventDefault()
-            const { target } = event,
-                  modalId  = target.attributes[this.prefix].nodeValue
-            this.convertModal(modalId)
+    _watch () {
+        this.placeholder.addEventListener('click', this.close.bind(this))
+        
+        document.querySelectorAll(`.${this.lastModalElementsClassList}`).forEach(item => {
+            item.addEventListener('click', this.close.bind(this))
         })
-    }
-    _initOpenObjects () {
-        document.querySelectorAll(`${this.openOnTag || '*'}[${this.prefix || this.defaultPrefix}]`).forEach(this._openObjectsHandler.bind(this))
+
+        if(this.closeOnESC) {
+            window.onkeyup = e => {
+                if(this.modals.length >= 1 && e.keyCode === 27) {
+                    this.close()
+                    return
+                }
+            }
+        }
     }
 
     /**
-     * @return plugin initialization
+     * Initialization Plugin
      */
     _init () {
-        this._initStyles()
-        this._addPlaceholder()
-        this._initOpenObjects()
+        const { prefix, validTags, eventOpen } = this
+
+        document.querySelectorAll(`${validTags}[${prefix}]`).forEach(item => {
+            item.addEventListener(eventOpen, this.open.bind(this)) 
+        })
+
+        return this
     }
 }
-
-export default zModal
