@@ -10,6 +10,8 @@ export default class zModal {
         this.closingElements = []
         // array modals
         this.modals = new Array()
+        // callback data-attribute. For example: (zmodaCallback)
+        this.callbackAttribute = 'Callback'
         // default class
         this.defaultClass = 'zmodal'
         // last modal elements, which has class zmodal-close
@@ -45,7 +47,27 @@ export default class zModal {
             // get modal from data attribute
             getModal ({ dataset }) {
                 return document.getElementById(dataset[this.self.prefix.replace('data-','')])
-            } 
+            },
+            // get user options
+            startCallback (target) {
+                const { last } = this.self
+                let lastHTML = last.innerHTML
+                const getPatternData = lastHTML.match(/\{#(.*)#\}/g)
+                try {
+                    const CallbackFunction = target.dataset[this.self.defaultClass+this.self.callbackAttribute],
+                          Method = this.self.methods[CallbackFunction]
+                    
+                    if(getPatternData !== null) {
+                        getPatternData.forEach(pattern => {
+                            let data = pattern.replace(/\{#|#\}/g,'').trim()
+                            lastHTML = lastHTML.replace(pattern,eval(`window.zModal.data.${data}`))
+                        })
+                    }
+
+                    last.innerHTML = lastHTML
+                    Method.call(this.self.data, last)
+                } catch (e) {}
+            }
         }
 
         // Veryfy user props. and init plugin
@@ -60,7 +82,7 @@ export default class zModal {
         const { validTags, prefix, 
                 eventOpen, timeOC, 
                 fillPlaceholder, closeOnESC,
-                closeOnPlaceholder } = this.props
+                closeOnPlaceholder, methods, data } = this.props
         
         // delete user props and replacing valid propses
         delete this.props
@@ -78,6 +100,11 @@ export default class zModal {
         this.closeOnESC = closeOnESC || !1
         // where you click on placeholder, modal hide.
         this.closeOnPlaceholder = closeOnPlaceholder || 1
+        // user callback methods
+        this.methods = methods || {}
+        // user data
+        this.data = data || {}
+
         return this
     }
 
@@ -88,9 +115,12 @@ export default class zModal {
         const { F } = this
         const currentModal = F.getModal(target)
         
-        
         if( !F.isModalOpen(currentModal) && !F.isModalInArray(currentModal) ) {
+            // set global modal HTML
+            currentModal.HTML = currentModal.innerHTML
+
             this._pushModal(currentModal).show()
+            F.startCallback(target)
         }
     }
     
@@ -143,8 +173,10 @@ export default class zModal {
 
             this.doWithWait(() => {
                 last.classList.add(this.hiddenClass)
-
+                // hide placeholder
                 if(hidePlaceholder) this.placeholder.classList.add(this.hiddenClass)
+                // set old innerhtml in modal (with patterns)
+                last.innerHTML = last.HTML
             })
         } catch (e) {}
     }
@@ -155,7 +187,7 @@ export default class zModal {
     _pushModal (newModal) {
         this.modals.push(newModal)
         this.modals.reverse()
-        this.effectClass = newModal.dataset.effect
+        this.effectClass = newModal.dataset.zmodalEffect
         this._updateLast()
 
         return this
@@ -214,6 +246,8 @@ export default class zModal {
         document.querySelectorAll(`${validTags}[${prefix}]`).forEach(item => {
             item.addEventListener(eventOpen, this.open.bind(this)) 
         })
+
+        window.zModal = this
 
         return this
     }
