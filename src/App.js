@@ -10,7 +10,7 @@ new zModal({
     },
     methods: {
         method (last) {
-            
+            this.asd = 'hello'
         }
     }
 })

@@ -51,21 +51,27 @@ export default class zModal {
             // get user options
             startCallback (target) {
                 const { last } = this.self
-                let lastHTML = last.innerHTML
-                const getPatternData = lastHTML.match(/\{#(.*)#\}/g)
+                let lastText = last.childNodes
+
                 try {
                     const CallbackFunction = target.dataset[this.self.defaultClass+this.self.callbackAttribute],
-                          Method = this.self.methods[CallbackFunction]
-                    
-                    if(getPatternData !== null) {
-                        getPatternData.forEach(pattern => {
-                            let data = pattern.replace(/\{#|#\}/g,'').trim()
-                            lastHTML = lastHTML.replace(pattern,eval(`window.zModal.data.${data}`))
-                        })
-                    }
-
-                    last.innerHTML = lastHTML
+                           Method = this.self.methods[CallbackFunction]
                     Method.call(this.self.data, last)
+                } catch (e) {}
+
+                try {
+                    for(let child in lastText) {
+                        const Child = lastText[child]
+                        const getPatternData = Child.textContent.match(/(\{#(.*)#\})/g)
+                        if(getPatternData) {
+                            getPatternData = getPatternData[0].replace(/ /g,'').replace(/#\}/g,'-').replace(/\{#/g,'').split('-')
+                            getPatternData.forEach((pattern,i) => {
+                                if(pattern !== '') {
+                                    Child.textContent = Child.textContent.replace(eval(`/\{# ${pattern} #\}/`),eval(`window.zModal.data.${pattern}`))
+                                }
+                            })
+                        }
+                    }
                 } catch (e) {}
             }
         }
@@ -114,11 +120,10 @@ export default class zModal {
     open ({ target }) {
         const { F } = this
         const currentModal = F.getModal(target)
-        
         if( !F.isModalOpen(currentModal) && !F.isModalInArray(currentModal) ) {
             // set global modal HTML
             currentModal.HTML = currentModal.innerHTML
-
+            // push modal
             this._pushModal(currentModal).show()
             F.startCallback(target)
         }
