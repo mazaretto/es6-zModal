@@ -4,13 +4,11 @@ import zModal from './zModal'
 new zModal({
     closeOnESC: true,
     data: {
-        hello: {
-            a: 1
-        }
+        formName: 'Hello'
     },
     methods: {
         method (last) {
-            this.asd = 'hello'
+            
         }
     }
 })

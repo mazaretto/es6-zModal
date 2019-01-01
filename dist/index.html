@@ -11,13 +11,15 @@
         <!-- bundle script -->
         <div class="zmodal zmodal-hidden" data-zmodal-effect="fadein" id="callback_modal">
             <div class="zmodal-close">фыв</div>
-            <div class="zmodal-close">{# hello.a #}</div>
-            <h1 data-zmodal="second_modal">{# hello.a #}{# asd #} {# asd #} da da</h1>
+            {# formName #}
+            <h1 data-zmodal="second_modal">
+                {# formName #}    
+            </h1>
         </div>
-        <div class="zmodal zmodal-hidden" data-zmodal-effect="fadein" id="second_modal">
+        <div class="zmodal zmodal-hidden" data-zmodal-callback="method" data-zmodal-effect="fadein" id="second_modal">
             <div class="zmodal-close">фыв</div>
             <div class="zmodal-close">фыв</div>
-            <h1>asdasdasdas</h1>
+            <h1>{# formName #}</h1>
         </div>
         <script src="zmodal.min.js"></script>
     </body>

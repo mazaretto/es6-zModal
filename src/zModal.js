@@ -22,6 +22,8 @@ export default class zModal {
         this.placeholderVisibleClass = this.placeholderClass + '-visible'
         // hidden class
         this.hiddenClass = this.defaultClass + '-hidden' 
+        // last modal nodes
+        this.lastModalOldNodes = []
         // Snippet functions
         this.F = {
             // self {zModal}
@@ -50,23 +52,30 @@ export default class zModal {
             },
             // get user options
             startCallback (target) {
+                // last modal
                 const { last } = this.self
+                // textNode last modal
                 let lastText = last.childNodes
-
+                // Callbacks script
                 try {
+                    // callback function from data-attribute (data-zmodal-callback)
                     const CallbackFunction = target.dataset[this.self.defaultClass+this.self.callbackAttribute],
-                           Method = this.self.methods[CallbackFunction]
-                    Method.call(this.self.data, last)
+                            Method = this.self.methods[CallbackFunction] // method callback from attribute
+                    Method.call(this.self.data, last) // call method
                 } catch (e) {}
 
+                // Patterns script
                 try {
                     for(let child in lastText) {
                         const Child = lastText[child]
+                        // get main pattern {# variable #}
                         const getPatternData = Child.textContent.match(/(\{#(.*)#\})/g)
                         if(getPatternData) {
+                            // split and replace pattern
                             getPatternData = getPatternData[0].replace(/ /g,'').replace(/#\}/g,'-').replace(/\{#/g,'').split('-')
                             getPatternData.forEach((pattern,i) => {
                                 if(pattern !== '') {
+                                    // update textNode from parent node
                                     Child.textContent = Child.textContent.replace(eval(`/\{# ${pattern} #\}/`),eval(`window.zModal.data.${pattern}`))
                                 }
                             })
@@ -121,10 +130,21 @@ export default class zModal {
         const { F } = this
         const currentModal = F.getModal(target)
         if( !F.isModalOpen(currentModal) && !F.isModalInArray(currentModal) ) {
-            // set global modal HTML
-            currentModal.HTML = currentModal.innerHTML
+            // get old content modal
+            let oldContent = Object.getOwnPropertyNames(currentModal.childNodes).map(
+                item => ({
+                    el: currentModal.childNodes[item],
+                    content: (currentModal.childNodes[item].nodeName == '#text') ? currentModal.childNodes[item].textContent : currentModal.childNodes[item].innerHTML
+                })
+            )
+            // set old content to global zModal object
+            window.zModal.lastModalOldNodes.push({
+                modal: currentModal,
+                oldContent
+            })
             // push modal
             this._pushModal(currentModal).show()
+            // start callbacks and pattern engines
             F.startCallback(target)
         }
     }
@@ -180,8 +200,23 @@ export default class zModal {
                 last.classList.add(this.hiddenClass)
                 // hide placeholder
                 if(hidePlaceholder) this.placeholder.classList.add(this.hiddenClass)
-                // set old innerhtml in modal (with patterns)
-                last.innerHTML = last.HTML
+                // replace HTML in last modal
+                window.zModal.lastModalOldNodes.forEach((node,i) => {
+                    if(node.modal === last) {
+                        // clear last modal HTML
+                        node.modal.innerHTML = ''
+                        // each content
+                        node.oldContent.forEach(item => {
+                            if(item.el.nodeName === '#text') {
+                                item.el.textContent = item.content
+                            } else {
+                                item.el.innerHTML = item.content
+                            }
+                            // add childs in modal
+                            node.modal.appendChild(item.el)
+                        })
+                    }
+                })
             })
         } catch (e) {}
     }
