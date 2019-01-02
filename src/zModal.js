@@ -59,11 +59,20 @@ export default class zModal {
                 return modalDiv
             },
 
+            setModalCallback (modal,callbackName) {
+                modal.dataset.zmodalCallback = callbackName
+            },
+
+            getModalCallback (modalId) {
+                return this.getModalFromId(modalId).dataset.zmodalCallback
+            },
+
             setModalOptions (modal, opts) {
                 if(opts.callbackFunction) {
-                    modal.dataset.zmodalCallback = opts.callbackFunction
+                    this.setModalCallback(modal, opts.callbackFunction)
+                } else {
+                    (opts.extendCallback !== undefined) ? this.setModalCallback(modal, this.getModalCallback(opts.extendCallback)) : null
                 }
-
                 modal.innerHTML = opts.template
                 modal.dataset.zmodalEffect = opts.effect
                 modal.classList.add(this.self.defaultClass, this.self.hiddenClass)
@@ -163,12 +172,14 @@ export default class zModal {
         }
         const creatingModal = F.createModalDOM(modalId)
         const addUserOptions = F.setModalOptions(creatingModal, {
-            template, effect, callbackFunction: fnName
+            template, effect, callbackFunction: fnName, extendCallback: opts.extendCallback
         })
 
         // add function on callback methods zModal
         this.methods[fnName] = fnCreate
         F.appendModal(addUserOptions)
+
+        return this
     }
 
     /**
