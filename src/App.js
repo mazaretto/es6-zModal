@@ -1,7 +1,7 @@
 import {} from "./assets/index.less"
 import zModal from './zModal'
 
-new zModal({
+let App = new zModal({
     closeOnESC: true,
     data: {
         formName: 'Hello'
@@ -11,4 +11,12 @@ new zModal({
             
         }
     }
+}).createModal('asd',{
+    effect: 'slideup',
+    callbackFunction () {
+        console.log(this)
+    },
+    template: `
+        <h1>{# formName #}</h1>
+    `
 })

@@ -46,9 +46,34 @@ export default class zModal {
 
                 return findModal.length > 0
             },
-            // get modal from data attribute
+            getModalFromId (modalId) {
+                return document.getElementById(modalId)
+            },
             getModal ({ dataset }) {
-                return document.getElementById(dataset[this.self.prefix.replace('data-','')])
+                return this.getModalFromId(dataset[this.self.prefix.replace('data-','')])
+            },
+
+            createModalDOM (id) {
+                const modalDiv = document.createElement('div')
+                modalDiv.id = id
+                return modalDiv
+            },
+
+            setModalOptions (modal, opts) {
+                if(opts.callbackFunction) {
+                    modal.dataset.zmodalCallback = opts.callbackFunction
+                }
+
+                modal.innerHTML = opts.template
+                modal.dataset.zmodalEffect = opts.effect
+                modal.classList.add(this.self.defaultClass, this.self.hiddenClass)
+
+                return modal
+            },
+
+            appendModal(modal) {
+                document.body.appendChild(modal)
+                return this
             },
             // get user options
             startCallback (target) {
@@ -123,12 +148,41 @@ export default class zModal {
         return this
     }
 
+    createModal (modalId, opts = {}) {
+        const { F } = this
+        let fnName, fnValue, fnCreate, callbackFunction, effect, template
+
+        template = (opts.template) ? opts.template : ``
+        effect = (opts.effect) ? opts.effect : 'fadein'
+        callbackFunction = (opts.callbackFunction) ? opts.callbackFunction : false
+
+        if(callbackFunction instanceof Function) {
+            fnName = 'zModalCallback_'+Math.floor((Math.random()+2)*50), // create new function name
+            fnValue = callbackFunction.toString().replace(/((.*)\{)/g,'').replace(/\}| /g,'').trim()
+            fnCreate = eval(`(() => { return function ${fnName} () {${fnValue}} })()`);
+        }
+        const creatingModal = F.createModalDOM(modalId)
+        const addUserOptions = F.setModalOptions(creatingModal, {
+            template, effect, callbackFunction: fnName
+        })
+
+        // add function on callback methods zModal
+        this.methods[fnName] = fnCreate
+        F.appendModal(addUserOptions)
+    }
+
     /**
      * Open and check modal
      */
     open ({ target }) {
         const { F } = this
         const currentModal = F.getModal(target)
+        this.openModal(currentModal)
+    }
+
+    openModal (currentModal) {
+        const { F } = this
+        const target = (currentModal.target) ? currentModal.target : currentModal
         if( !F.isModalOpen(currentModal) && !F.isModalInArray(currentModal) ) {
             // get old content modal
             let oldContent = Object.getOwnPropertyNames(currentModal.childNodes).map(
@@ -146,7 +200,30 @@ export default class zModal {
             this._pushModal(currentModal).show()
             // start callbacks and pattern engines
             F.startCallback(target)
+
+            return true
         }
+        return false
+    }
+
+    openModalFromId (id, callback, time = false) {
+        const { F } = this
+        const findModal = F.getModalFromId(id)
+        const openFunction = () => {
+            if(this.openModal(findModal)) {
+                (callback instanceof Function) ? callback.apply(this) : null;
+            }
+        }
+
+        if(typeof time === "number") {
+            this.doWithWait(() => {
+                openFunction()
+            }, time)
+        } else {
+            openFunction()
+        }
+
+        return this
     }
     
     /**
@@ -181,7 +258,8 @@ export default class zModal {
     /**
      * Timeout on open
      */
-    doWithWait(callback, time = this.timeOC) {
+    doWithWait(callback, time) {
+        time = (typeof time === "number") ? time : this.timeOC
         setTimeout(callback, time)
     }
 
@@ -232,9 +310,9 @@ export default class zModal {
 
         return this
     }
-
     /**
      * Update last modal
+     * @param {*} last (DOM element)
      */
     _updateLast (last) {
         this.last = last || this.modals[0]
@@ -257,16 +335,12 @@ export default class zModal {
         return this
     }
 
-    /**
-     * Watch click, hovers and other methods
-     */
-    _watch () {
+    // placeholder click 
+    clickPlaceholder() {
         this.placeholder.addEventListener('click', this.close.bind(this))
-        
-        document.querySelectorAll(`.${this.lastModalElementsClassList}`).forEach(item => {
-            item.addEventListener('click', this.close.bind(this))
-        })
-
+    }
+    // press ESC
+    pressESC () {
         if(this.closeOnESC) {
             window.onkeyup = e => {
                 if(this.modals.length >= 1 && e.keyCode === 27) {
@@ -276,19 +350,30 @@ export default class zModal {
             }
         }
     }
+    // click on closing items
+    clickClosingItems () {
+        document.querySelectorAll(`.${this.lastModalElementsClassList}`).forEach(item => {
+            item.addEventListener('click', this.close.bind(this))
+        })
+    }
+    /**
+     * Watch click, hovers and other methods
+     */
+    _watch () {
+        this.pressESC()
+        this.clickPlaceholder()
+        this.clickClosingItems()
+    }
 
     /**
      * Initialization Plugin
      */
     _init () {
         const { prefix, validTags, eventOpen } = this
-
         document.querySelectorAll(`${validTags}[${prefix}]`).forEach(item => {
             item.addEventListener(eventOpen, this.open.bind(this)) 
         })
-
         window.zModal = this
-
         return this
     }
 }
