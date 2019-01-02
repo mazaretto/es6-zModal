@@ -19,4 +19,10 @@ let App = new zModal({
     template: `
         <h1>{# formName #}</h1>
     `
+}).createModal('asd123',{
+    effect: 'slideup',
+    extendCallback: 'asd',
+    template: `
+        <h1>{# formName #}</h1>
+    `
 })
