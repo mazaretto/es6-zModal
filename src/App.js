@@ -4,25 +4,20 @@ import zModal from './zModal'
 let App = new zModal({
     closeOnESC: true,
     data: {
-        formName: 'Hello'
-    },
-    methods: {
-        method (last) {
-            
-        }
+        videoSource: 'hello'
     }
 }).createModal('asd',{
     effect: 'slideup',
-    callbackFunction () {
-        console.log(this)
+    youtubeVideo: {
+        url: 'https://www.youtube.com/embed/F0aaybngOBQ',
+        w: 500,
+        h: 500,
+        autoplay: false
     },
     template: `
-        <h1>{# formName #}</h1>
-    `
-}).createModal('asd123',{
-    effect: 'slideup',
-    extendCallback: 'asd',
-    template: `
-        <h1>{# formName #}</h1>
+        <p>{# videoSource #}</p>
+        <div class="zmodal-video-container">
+            
+        </div>
     `
 })

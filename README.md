@@ -1,1 +1,1 @@
-#zModal - modal page plugin with only ES6
+**zModal-ES6 | Modal Window plugin.**

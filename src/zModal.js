@@ -67,12 +67,63 @@ export default class zModal {
                 return this.getModalFromId(modalId).dataset.zmodalCallback
             },
 
+            getTypeURLVideo (url) {
+                const isEmbedVideo = new RegExp(/(https|http)\:\/\/(www\.youtube\.com\/embed\/(.*))/g).test(url)
+                const isWatchVideo = new RegExp(/(https|http)\:\/\/(www\.youtube\.com\/watch\?v\=(.*))/g).test(url)
+                const isYOUTUbeVideo = new RegExp(/(https|http)\:\/\/(youtu\.be\/(.*))/g).test(url)
+
+                if(isEmbedVideo) return 'embed'
+                if(isWatchVideo) return 'watch'
+                if(isYOUTUbeVideo) return 'youtu.be'
+
+                return false
+            },
+
+            createValidYoutubeUrl (id, autoplay) {
+                return 'https://www.youtube.com/embed/' + id + ((autoplay) ? '?autoplay=1' : '')
+            },
+
+            convertYoutubeURLtoIframe (modal, { url, w = 400, h = 400, autoplay = false }, typeVideo) {
+                const   youtubeIframe = document.createElement('iframe')
+                        youtubeIframe.frameborder = "0"
+                        youtubeIframe.allow = "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+                        youtubeIframe.width = w
+                        youtubeIframe.height = h
+
+                let     youtubeVideoId = url.replace(/(http|https)\:\/\/((youtu\.be)|(www\.youtube\.com))\/((watch\?v\=)|(embed\/)|())/g,'').trim(),
+                        validUrlVideo = this.createValidYoutubeUrl(youtubeVideoId, autoplay)
+
+                youtubeIframe.src = validUrlVideo
+                modal.dataset.zmodalVideo = validUrlVideo
+                modal.video = youtubeIframe
+            },
+
             setModalOptions (modal, opts) {
+                const { url } = opts.youtubeVideo
+
                 if(opts.callbackFunction) {
                     this.setModalCallback(modal, opts.callbackFunction)
                 } else {
                     (opts.extendCallback !== undefined) ? this.setModalCallback(modal, this.getModalCallback(opts.extendCallback)) : null
                 }
+
+                if(url) {
+                    switch(this.getTypeURLVideo(url)) {
+                        case 'watch':
+                            this.convertYoutubeURLtoIframe(modal, opts.youtubeVideo,0)
+                            break;
+                        case 'embed':
+                            this.convertYoutubeURLtoIframe(modal, opts.youtubeVideo,1)
+                            break;
+                        case 'youtu.be':
+                            this.convertYoutubeURLtoIframe(modal, opts.youtubeVideo,2)
+                            break;
+                        default:
+                            console.warn('Youtube video url in not correct form!')
+                            break;
+                    }
+                }
+
                 modal.innerHTML = opts.template
                 modal.dataset.zmodalEffect = opts.effect
                 modal.classList.add(this.self.defaultClass, this.self.hiddenClass)
@@ -84,18 +135,31 @@ export default class zModal {
                 document.body.appendChild(modal)
                 return this
             },
+
+            appendVideo () {
+
+                const videoContainer = this.self.last.querySelector(`.${this.self.defaultClass}-video-container`)
+
+                if (videoContainer) {
+                   videoContainer.appendChild( this.self.last.video )
+                }
+            },
             // get user options
             startCallback (target) {
                 // last modal
                 const { last } = this.self
                 // textNode last modal
                 let lastText = last.childNodes
+                // start video script
+                if (last.video) {
+                    this.appendVideo()
+                }
                 // Callbacks script
                 try {
                     // callback function from data-attribute (data-zmodal-callback)
                     const CallbackFunction = target.dataset[this.self.defaultClass+this.self.callbackAttribute],
                             Method = this.self.methods[CallbackFunction] // method callback from attribute
-                    Method.call(this.self.data, last) // call method
+                    Method.call(this.self) // call method
                 } catch (e) {}
 
                 // Patterns script
@@ -103,7 +167,7 @@ export default class zModal {
                     for(let child in lastText) {
                         const Child = lastText[child]
                         // get main pattern {# variable #}
-                        const getPatternData = Child.textContent.match(/(\{#(.*)#\})/g)
+                        let getPatternData = Child.textContent.match(/(\{#(.*)#\})/g)
                         if(getPatternData) {
                             // split and replace pattern
                             getPatternData = getPatternData[0].replace(/ /g,'').replace(/#\}/g,'-').replace(/\{#/g,'').split('-')
@@ -159,20 +223,22 @@ export default class zModal {
 
     createModal (modalId, opts = {}) {
         const { F } = this
-        let fnName, fnValue, fnCreate, callbackFunction, effect, template
+        let fnName, fnValue, fnCreate, callbackFunction, effect, template, youtubeVideo
 
         template = (opts.template) ? opts.template : ``
         effect = (opts.effect) ? opts.effect : 'fadein'
         callbackFunction = (opts.callbackFunction) ? opts.callbackFunction : false
+        youtubeVideo = (opts.youtubeVideo) ? opts.youtubeVideo : false
 
         if(callbackFunction instanceof Function) {
             fnName = 'zModalCallback_'+Math.floor((Math.random()+2)*50), // create new function name
             fnValue = callbackFunction.toString().replace(/((.*)\{)/g,'').replace(/\}| /g,'').trim()
             fnCreate = eval(`(() => { return function ${fnName} () {${fnValue}} })()`);
         }
+
         const creatingModal = F.createModalDOM(modalId)
         const addUserOptions = F.setModalOptions(creatingModal, {
-            template, effect, callbackFunction: fnName, extendCallback: opts.extendCallback
+            template, effect, callbackFunction: fnName, extendCallback: opts.extendCallback, youtubeVideo
         })
 
         // add function on callback methods zModal
