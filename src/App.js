@@ -17,4 +17,10 @@ let App = new zModal({
     template: `
         <p>{# videoSource #}</p>
     `
+}).createModal('asd123',{
+    effect: 'slideup',
+    extendCallback: 'asd',
+    template: `
+        <h1>{# formName #}</h1>
+    `
 })

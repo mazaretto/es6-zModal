@@ -66,7 +66,6 @@ export default class zModal {
             getModalCallback (modalId) {
                 return this.getModalFromId(modalId).dataset.zmodalCallback
             },
-
             getTypeURLVideo (url) {
                 const isEmbedVideo = new RegExp(/(https|http)\:\/\/(www\.youtube\.com\/embed\/(.*))/g).test(url)
                 const isWatchVideo = new RegExp(/(https|http)\:\/\/(www\.youtube\.com\/watch\?v\=(.*))/g).test(url)
@@ -97,7 +96,6 @@ export default class zModal {
                 modal.dataset.zmodalVideo = validUrlVideo
                 modal.video = youtubeIframe
             },
-
             setModalOptions (modal, opts) {
                 const { url } = opts.youtubeVideo
 
@@ -123,7 +121,6 @@ export default class zModal {
                             break;
                     }
                 }
-
                 modal.innerHTML = opts.template
                 modal.dataset.zmodalEffect = opts.effect
                 modal.classList.add(this.self.defaultClass, this.self.hiddenClass)
