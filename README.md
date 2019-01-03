@@ -5,14 +5,13 @@ Documentation
 
 **Add JS and CSS files in your html:**
 ```html
-<link rel="stylesheet" type="text/css" href="zmodal.min.css" />
 <script type="text/javascript" src="zmodal.min.js" defer></script>
 ```
 **Initialize the plugin (params are optional):**
 ```javascript
-new zModal(options <Object>)
+new zModal(Object)
 ```
-**Plugin settings**
+**Plugin settings:**
 ```javascript
 // default options
 new zModal({
@@ -25,7 +24,7 @@ new zModal({
     template: `<p>{# myFirstModalWindow #}</p>`
 })
 ```
-**More about properties:**
+**All options:**
 ```javascript
 new zModal({
     closeOnESC: Boolean, 
@@ -39,12 +38,46 @@ new zModal({
     timeOC: Number
 })
 ```
+####Properties:
+* closeOnEsc - `close the modal window when pressing ESC`
+    * default - **false**
+* closeOnPlaceholder - `close the modal window when clicking on the background`
+    * default - **true**
+* data - `required object for templates and data properties`
+    * default - **{}**
+* methods - `necessary object for callback functions when opening a modal window`
+    * default - **{}**
+* validTags - `tags to be associated with the plugin`
+    * default - **all**
+* prefix - `data attribute that indicates modal window id`
+    * default - **data-zmodal**
+* fillPlaceholder - `cover background color`
+    * default - **#333**
+* eventOpen - `an event that will straggle on valid tags`
+    * default - **click**
+* timeOC - `opening and closing time of the modal window`
+    * default - **500 (ms)**
 
----
+####Methods:
+```javascript
+// creating a modal window
+zModal.createModal(String <modalId>, <Object> {
+    effect: String,
+    template: String,
+    youtubeVideo: <Object> {
+        w: Number,
+        h: Number,
+        url: String,
+        autoplay: boolean
+    }
+})
+// open a modal window
+zModal.openModalFromId(String <modalId>, Function <callback>, Time <Number>)
+```
+
 Introduction
 ---
 zModal is a minimalist and easy-to-use modal plugin written in native JavaScript.
-zModal is opnsource project.
 * No dependencies required
 * You can customize effects via CSS
 * Simple API
