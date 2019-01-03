@@ -19,6 +19,3 @@ $ git clone https://github.com/mazaretto/es6-zModal.git
 $ cd es6-zModal
 $ npm run start:dev || yarn start:dev
 ```
-
-Initialization plugin:
----
