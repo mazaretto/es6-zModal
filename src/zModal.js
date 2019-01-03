@@ -119,7 +119,7 @@ export default class zModal {
                             this.convertYoutubeURLtoIframe(modal, opts.youtubeVideo,2)
                             break;
                         default:
-                            console.warn('Youtube video url in not correct form!')
+                            console.warn('zModal #2 - Youtube video url in not correct form!')
                             break;
                     }
                 }
@@ -142,6 +142,8 @@ export default class zModal {
 
                 if (videoContainer) {
                    videoContainer.appendChild( this.self.last.video )
+                } else {
+                    console.warn(`zModal #1 - Video container not found! Add element with className zmodal-video-container in modal *${this.self.last.id}*.`)
                 }
             },
             // get user options

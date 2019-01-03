@@ -7,7 +7,7 @@ let App = new zModal({
         videoSource: 'hello'
     }
 }).createModal('asd',{
-    effect: 'slideup',
+    effect: 'zoomin',
     youtubeVideo: {
         url: 'https://www.youtube.com/embed/F0aaybngOBQ',
         w: 500,
@@ -16,8 +16,5 @@ let App = new zModal({
     },
     template: `
         <p>{# videoSource #}</p>
-        <div class="zmodal-video-container">
-            
-        </div>
     `
 })

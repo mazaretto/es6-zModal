@@ -1,7 +1,7 @@
 @import "./_vars";
 
 .transition {
-    transition:  .5s ease
+    transition: .5s ease
 }
 
 .@{Z}-denyoverflow {
@@ -43,6 +43,28 @@
 .@{Z}-slidedown {
     opacity: 1!important;
     transform: translateY(20px);
+}
+
+.@{Z}[@{effectAttr}="@{zoomIn}"] {
+  transform: scale(.8)
+}
+
+.@{Z}-zoomin {
+  transform: scale(1)!important;
+  opacity: 1!important;
+}
+
+.@{Z}[@{effectAttr}="@{rotateleft}"] {
+  transform: rotate(30deg);
+  -webkit-transform-origin: left top;
+  -moz-transform-origin: left top;
+  -ms-transform-origin: left top;
+  -o-transform-origin: left top;
+  transform-origin: left top;
+}
+.@{Z}-rotatelefttop {
+  opacity: 1!important;
+  transform: rotate(0deg) !important;
 }
 
 .@{Z} {
