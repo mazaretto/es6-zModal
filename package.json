@@ -4,6 +4,7 @@
     "url": "https://github.com/mazaretto/es6-zModal.git",
     "type": "git"
   },
+  "license": "MIT",
   "author":"Tishenko Andrey",
   "version":"0.0.0",
   "scripts": {
