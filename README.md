@@ -1,4 +1,4 @@
-zModal
+![image](logo.png)
 ====
 Documentation
 ---
