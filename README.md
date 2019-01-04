@@ -1,8 +1,5 @@
 ![image](logo.png)
 
-Documentation
----
-
 Introduction
 ---
 zModal is a minimalist and easy-to-use modal plugin written in native JavaScript.
@@ -19,7 +16,8 @@ $ git clone https://github.com/mazaretto/es6-zModal.git
 $ cd es6-zModal
 $ npm run start:dev || yarn start:dev
 ```
-
+Documentation
+---
 **Add JS and CSS files in your html:**
 ```html
 <script type="text/javascript" src="zmodal.min.js" defer></script>
