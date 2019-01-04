@@ -4,8 +4,9 @@
     "url": "https://github.com/mazaretto/es6-zModal.git",
     "type": "git"
   },
+  "license": "MIT",
   "author":"Tishenko Andrey",
-  "version":"0.0.0",
+  "version":"0.0.1",
   "scripts": {
     "start:dev": "webpack-dev-server",
     "start:build": "webpack --mode=production"

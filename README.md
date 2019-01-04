@@ -3,6 +3,23 @@ zModal
 Documentation
 ---
 
+Introduction
+---
+zModal is a minimalist and easy-to-use modal plugin written in native JavaScript.
+* No dependencies required
+* You can customize effects via CSS
+* Simple API
+* No extra files to download
+* Pattern support to simplify development
+
+Contribute
+---
+```javascript
+$ git clone https://github.com/mazaretto/es6-zModal.git
+$ cd es6-zModal
+$ npm run start:dev || yarn start:dev
+```
+
 **Add JS and CSS files in your html:**
 ```html
 <script type="text/javascript" src="zmodal.min.js" defer></script>
@@ -73,21 +90,4 @@ zModal.createModal(String <modalId>, <Object> {
 })
 // open a modal window
 zModal.openModalFromId(String <modalId>, Function <callback>, Time <Number>)
-```
-
-Introduction
----
-zModal is a minimalist and easy-to-use modal plugin written in native JavaScript.
-* No dependencies required
-* You can customize effects via CSS
-* Simple API
-* No extra files to download
-* Pattern support to simplify development
-
-Contribute
----
-```javascript
-$ git clone https://github.com/mazaretto/es6-zModal.git
-$ cd es6-zModal
-$ npm run start:dev || yarn start:dev
 ```

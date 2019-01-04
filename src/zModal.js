@@ -143,6 +143,24 @@ export default class zModal {
                     console.warn(`zModal #1 - Video container not found! Add element with className zmodal-video-container in modal *${this.self.last.id}*.`)
                 }
             },
+
+            findPattern(text) {
+                return text.match(/(\{#(.*)#\})/g)
+            },
+
+            decodePattern (text) {
+                return text.replace(/ /g,'').replace(/#\}/g,'-').replace(/\{#/g,'').split('-')
+            },
+
+            replacePatternOnData (elem, patternData) {
+                return elem.replace(eval(`/\{# ${patternData} #\}/`),eval(`window.zModal.data.${patternData}`))
+            },
+
+            eachPatterns (patternArray,callback) {
+                patternArray.forEach(pattern => {
+                    if(pattern != '') callback(pattern)
+                })
+            },
             // get user options
             startCallback (target) {
                 // last modal
@@ -166,15 +184,36 @@ export default class zModal {
                     for(let child in lastText) {
                         const Child = lastText[child]
                         // get main pattern {# variable #}
-                        let getPatternData = Child.textContent.match(/(\{#(.*)#\})/g)
+                        let getPatternData = this.findPattern(Child.textContent)
+
+                        if(Child.attributes !== undefined) {
+                            let oldAttrs = []
+                            let attrs = Array.from( Child.attributes ).forEach(attr => {
+                                const findPattern = this.findPattern(attr.value)
+                                if(findPattern) {
+                                    let getData = this.decodePattern(findPattern[0])
+                                    this.eachPatterns(getData, pattern => {
+                                        oldAttrs.push(
+                                            {
+                                                el: Child,
+                                                opts: {
+                                                    name: `${attr.name}`,
+                                                    value: attr.value
+                                                }
+                                            }
+                                        )
+                                        last.oldAttrs = oldAttrs
+                                        Child.setAttribute(attr.name, this.replacePatternOnData(attr.value, pattern))
+                                    })
+                                }
+                            })
+                        }
+
                         if(getPatternData) {
                             // split and replace pattern
-                            getPatternData = getPatternData[0].replace(/ /g,'').replace(/#\}/g,'-').replace(/\{#/g,'').split('-')
-                            getPatternData.forEach((pattern,i) => {
-                                if(pattern !== '') {
-                                    // update textNode from parent node
-                                    Child.textContent = Child.textContent.replace(eval(`/\{# ${pattern} #\}/`),eval(`window.zModal.data.${pattern}`))
-                                }
+                            getPatternData = this.decodePattern(getPatternData[0])
+                            this.eachPatterns(getPatternData, pattern => {
+                                Child.textContent = this.replacePatternOnData(Child.textContent, pattern)
                             })
                         }
                     }
@@ -366,6 +405,12 @@ export default class zModal {
                             } else {
                                 item.el.innerHTML = item.content
                             }
+
+                            if(node.modal.oldAttrs.length > 0) {
+                                node.modal.oldAttrs.forEach(attr => {
+                                    attr.el.setAttribute(attr.opts.name, attr.opts.value)
+                                })
+                            }
                             // add childs in modal
                             node.modal.appendChild(item.el)
                         })
@@ -438,7 +483,10 @@ export default class zModal {
     _watch () {
         this.pressESC()
         this.clickPlaceholder()
-        this.clickClosingItems()
+        // get items with class zmodal-close
+        this.doWithWait(() => {
+            this.clickClosingItems()
+        }, 1500)
     }
 
     /**

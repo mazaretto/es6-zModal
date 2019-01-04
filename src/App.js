@@ -4,23 +4,19 @@ import zModal from './zModal'
 let App = new zModal({
     closeOnESC: true,
     data: {
-        videoSource: 'hello'
+        formCallback: {
+            title: 'asd',
+            descr: `Предновогоднее веселье бьет ключом. 
+                    Компании подводят итоги, подсчитывают кто прибыли, а кто убытки. 
+                    Как и всегда, у всех очень разные итоги и результаты Что любопытно, и те и другие озвучивают одно и то же причиной: кризис, санкции, снижение покупательской способности `
+        },
+        callbackModalId: 'asd'
     }
-}).createModal('asd',{
-    effect: 'zoomin',
-    youtubeVideo: {
-        url: 'https://www.youtube.com/embed/F0aaybngOBQ',
-        w: 500,
-        h: 500,
-        autoplay: false
-    },
+}).createModal('asd', {
+    effect: 'fadein',
     template: `
-        <p>{# videoSource #}</p>
-    `
-}).createModal('asd123',{
-    effect: 'slideup',
-    extendCallback: 'asd',
-    template: `
-        <h1>{# formName #}</h1>
+        <h1 class="zmodal-{# formCallback.title #}">{# formCallback.title #}</h1>
+        <p>{# formCallback.descr #}</p>
+        <div class="zmodal-close">{# formCallback.title #}</div>
     `
 })
