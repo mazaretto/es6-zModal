@@ -66,36 +66,30 @@ export default class zModal {
             getModalCallback (modalId) {
                 return this.getModalFromId(modalId).dataset.zmodalCallback
             },
-            getTypeURLVideo (url) {
-                const isEmbedVideo = new RegExp(/(https|http)\:\/\/(www\.youtube\.com\/embed\/(.*))/g).test(url)
-                const isWatchVideo = new RegExp(/(https|http)\:\/\/(www\.youtube\.com\/watch\?v\=(.*))/g).test(url)
-                const isYOUTUbeVideo = new RegExp(/(https|http)\:\/\/(youtu\.be\/(.*))/g).test(url)
-
-                if(isEmbedVideo) return 'embed'
-                if(isWatchVideo) return 'watch'
-                if(isYOUTUbeVideo) return 'youtu.be'
-
-                return false
-            },
 
             createValidYoutubeUrl (id, autoplay) {
                 return 'https://www.youtube.com/embed/' + id + ((autoplay) ? '?autoplay=1' : '')
             },
 
-            convertYoutubeURLtoIframe (modal, { url, w = 400, h = 400, autoplay = false }, typeVideo) {
+            convertYoutubeURLtoIframe (modal, { url, w = 400, h = 400, autoplay = false }) {
                 const   youtubeIframe = document.createElement('iframe')
                         youtubeIframe.frameborder = "0"
                         youtubeIframe.allow = "accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
                         youtubeIframe.width = w
                         youtubeIframe.height = h
 
-                let     youtubeVideoId = url.replace(/(http|https)\:\/\/((youtu\.be)|(www\.youtube\.com))\/((watch\?v\=)|(embed\/)|())/g,'').trim(),
-                        validUrlVideo = this.createValidYoutubeUrl(youtubeVideoId, autoplay)
-
-                youtubeIframe.src = validUrlVideo
-                modal.dataset.zmodalVideo = validUrlVideo
-                modal.video = youtubeIframe
+                if(url.match(/(http|https)\:\/\/((youtu\.be)|(www\.youtube\.com))\/((watch\?v\=)|(embed\/)|())/g)) {
+                    let     youtubeVideoId = url.replace(/(http|https)\:\/\/((youtu\.be)|(www\.youtube\.com))\/((watch\?v\=)|(embed\/)|())/g,'').trim(),
+                            validUrlVideo = this.createValidYoutubeUrl(youtubeVideoId, autoplay)
+                    
+                    youtubeIframe.src = validUrlVideo
+                    modal.dataset.zmodalVideo = validUrlVideo
+                    modal.video = youtubeIframe
+                } else {
+                    console.error(`zModal #2 - Youtube video url in not correct form - ${url}! `)
+                }
             },
+
             setModalOptions (modal, opts) {
                 const { url } = opts.youtubeVideo
 
@@ -104,22 +98,9 @@ export default class zModal {
                 } else {
                     (opts.extendCallback !== undefined) ? this.setModalCallback(modal, this.getModalCallback(opts.extendCallback)) : null
                 }
-
+                // if isset youtube url
                 if(url) {
-                    switch(this.getTypeURLVideo(url)) {
-                        case 'watch':
-                            this.convertYoutubeURLtoIframe(modal, opts.youtubeVideo,0)
-                            break;
-                        case 'embed':
-                            this.convertYoutubeURLtoIframe(modal, opts.youtubeVideo,1)
-                            break;
-                        case 'youtu.be':
-                            this.convertYoutubeURLtoIframe(modal, opts.youtubeVideo,2)
-                            break;
-                        default:
-                            console.warn('zModal #2 - Youtube video url in not correct form!')
-                            break;
-                    }
+                    this.convertYoutubeURLtoIframe(modal, opts.youtubeVideo)
                 }
                 modal.innerHTML = opts.template
                 modal.dataset.zmodalEffect = opts.effect
