@@ -55,7 +55,7 @@ new zModal({
     timeOC: Number
 })
 ```
-####Properties:
+Properties:
 * closeOnEsc - `close the modal window when pressing ESC`
     * default - **false**
 * closeOnPlaceholder - `close the modal window when clicking on the background`
@@ -75,7 +75,7 @@ new zModal({
 * timeOC - `opening and closing time of the modal window`
     * default - **500 (ms)**
 
-####Methods:
+Methods:
 ```javascript
 // creating a modal window
 zModal.createModal(String <modalId>, <Object> {
