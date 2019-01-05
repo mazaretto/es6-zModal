@@ -1,3 +1,5 @@
+import {} from "./assets/index.less"
+
 export default class zModal {
     constructor (props) {
         // Set user props

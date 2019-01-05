@@ -1,4 +1,3 @@
-import {} from "./assets/index.less"
 import zModal from './zModal'
 
 let App = new zModal({
